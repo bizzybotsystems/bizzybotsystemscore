@@ -53,11 +53,6 @@ with tab1:
         st.warning("🔒 Detailed error reports are locked.")
         if st.button("Unlock Full Report ($199)"):
             st.link_button("Go to Payment", "https://buy.stripe.com/4gM3cv2c0cvudrg6Ic7g404")
-            
-        # HIDDEN SECTION
-        if st.checkbox("I have already purchased access (Admin Override)"):
-            st.write("### Full Detailed Audit")
-            st.dataframe(validation_df)
 
 # --- TAB 2: CONTENT ENGINE (ADMIN ONLY) ---
 with tab2:
