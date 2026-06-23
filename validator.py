@@ -44,7 +44,20 @@ with tab1:
     
     if data_source is not None:
         validation_df = validate_compliance(data_source)
-        st.dataframe(validation_df)
+        
+        # DISPLAY PARTIAL RESULTS (FREE)
+        st.write("### Audit Summary")
+        st.dataframe(validation_df[['Patient_ID', 'Validation_Status']])
+        
+        # THE "GATE"
+        st.warning("🔒 Detailed error reports are locked.")
+        if st.button("Unlock Full Report ($10)"):
+            st.link_button("Go to Payment", "https://buy.stripe.com/4gM3cv2c0cvudrg6Ic7g404")
+            
+        # HIDDEN SECTION
+        if st.checkbox("I have already purchased access (Admin Override)"):
+            st.write("### Full Detailed Audit")
+            st.dataframe(validation_df)
 
 # --- TAB 2: CONTENT ENGINE (ADMIN ONLY) ---
 with tab2:
