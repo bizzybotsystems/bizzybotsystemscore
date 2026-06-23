@@ -2,51 +2,59 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(page_title="BizzyBot Systems Core", page_icon="⚡")
+# ==========================================
+# BIZZYBOT SYSTEMS CORE: COMPLIANCE & CONTENT
+# ==========================================
 
+st.set_page_config(page_title="BizzyBot Live Validator", page_icon="⚡")
 st.title("⚡ BizzyBot Systems Core")
-st.subheader("Automated Compliance Validator")
 
-# Pro-Tip: Define your required schema so it never fails on bad column names
-REQUIRED_COLUMNS = ['Patient_ID', 'Form_Type', 'Completion_Status', 'Submission_Date']
+tab1, tab2 = st.tabs(["⚡ Compliance Validator", "📝 Content Engine"])
 
-uploaded_file = st.file_uploader("Upload your file (CSV or Excel)", type=['csv', 'xlsx'])
+# --- TAB 1: COMPLIANCE VALIDATOR (CLIENT FACING) ---
+with tab1:
+    st.subheader("Automated Compliance Validator")
+    uploaded_file = st.file_uploader("Upload your data file here", type=["xlsx", "csv"])
 
-if uploaded_file is not None:
-    try:
-        # 1. Futuristic Logic: Detect file type automatically
-        if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file)
-        else:
-            df = pd.read_excel(uploaded_file, engine='openpyxl')
+    with st.sidebar:
+        st.write("## 🛠️ Builder Tools")
+        auto_test = st.button("GENERATE FAKE DATA & TEST")
 
-        st.success("File uploaded successfully!")
+    def validate_compliance(df):
+        results = []
+        for index, row in df.iterrows():
+            errors = []
+            patient_id = str(row.get('Patient_ID', ''))
+            if not any(char.isdigit() for char in patient_id):
+                errors.append("Invalid ID format")
+            if pd.isna(row.get('Form_Type')):
+                errors.append("Form Type is required")
+            if str(row.get('Completion_Status', '')).lower() != 'completed':
+                errors.append("Must be 'Completed'")
+            status = "❌ Compliance Failure" if errors else "✅ Compliant"
+            results.append({'Patient_ID': patient_id, 'Validation_Status': status, 'Specific_Errors': ", ".join(errors)})
+        return pd.DataFrame(results)
 
-        # 2. Schema Validation (The "BizzyBot" standard)
-        missing_cols = [col for col in REQUIRED_COLUMNS if col not in df.columns]
-        if missing_cols:
-            st.error(f"Missing required columns: {missing_cols}")
-        else:
-            # 3. Intelligent Audit
-            st.write("### Audit Results")
-            
-            # Identify "Messy" Rows
-            null_count = df.isnull().sum().sum()
-            duplicates = df.duplicated().sum()
-            
-            # Show summary stats to make the client feel they got "value"
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Rows Processed", len(df))
-            col2.metric("Missing Values", null_count)
-            col3.metric("Duplicates", duplicates)
+    data_source = None
+    if uploaded_file:
+        try: data_source = pd.read_excel(uploaded_file)
+        except: data_source = pd.read_csv(uploaded_file)
+    elif auto_test:
+        data_source = pd.DataFrame({'Patient_ID': ['P101-1', 'P102-2'], 'Form_Type': ['Intake', 'Consent'], 'Completion_Status': ['Completed', None]})
+    
+    if data_source is not None:
+        validation_df = validate_compliance(data_source)
+        st.dataframe(validation_df)
 
-            # Display errors for the client
-            if null_count > 0 or duplicates > 0:
-                st.warning("⚠️ Data quality issues detected. Please review the flagged rows below.")
-                st.dataframe(df[df.isnull().any(axis=1) | df.duplicated()])
-            else:
-                st.balloons()
-                st.success("✅ Perfect compliance! Your data is ready.")
-
-    except Exception as e:
-        st.error(f"Error processing file: {e}")
+# --- TAB 2: CONTENT ENGINE (ADMIN ONLY) ---
+with tab2:
+    st.header("BizzyBot Content Engine")
+    password = st.sidebar.text_input("Admin Password:", type="password")
+    
+    if password == "BIZZYBOT123": 
+        industry = st.text_input("Enter Industry:")
+        problem = st.text_input("Describe '3 AM' problem:")
+        if st.button("Generate Article"):
+            st.markdown(f"### Solving {problem} in {industry}\n\nAt BizzyBotSystems, we automate the path to compliance.")
+    else:
+        st.warning("⚠️ Restricted Area: Enter password in sidebar to access.")
