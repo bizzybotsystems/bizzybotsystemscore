@@ -51,7 +51,7 @@ with tab1:
         
         # THE "GATE"
         st.warning("🔒 Detailed error reports are locked.")
-        if st.button("Unlock Full Report ($10)"):
+        if st.button("Unlock Full Report ($199)"):
             st.link_button("Go to Payment", "https://buy.stripe.com/4gM3cv2c0cvudrg6Ic7g404")
             
         # HIDDEN SECTION
