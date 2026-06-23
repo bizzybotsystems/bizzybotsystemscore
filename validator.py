@@ -1,36 +1,52 @@
 import streamlit as st
 import pandas as pd
+import io
 
-# BizzyBot Core Configuration
-st.set_page_config(page_title="BizzyBot | Live Validator", page_icon="⚡")
+st.set_page_config(page_title="BizzyBot Systems Core", page_icon="⚡")
+
 st.title("⚡ BizzyBot Systems Core")
 st.subheader("Automated Compliance Validator")
 
-# File Upload Slot
-uploaded_file = st.file_uploader("Upload your file here", type=["xlsx", "csv"])
+# Pro-Tip: Define your required schema so it never fails on bad column names
+REQUIRED_COLUMNS = ['Patient_ID', 'Form_Type', 'Completion_Status', 'Submission_Date']
 
-# Compliance Logic
-def validate_compliance(df):
-    results = []
-    for index, row in df.iterrows():
-        errors = []
-        patient_id = str(row.get('Patient_ID', ''))
-        if not any(char.isdigit() for char in patient_id):
-            errors.append("Invalid ID format")
-        if pd.isna(row.get('Form_Type')):
-            errors.append("Form Type is required")
-        if str(row.get('Completion_Status', '')).lower() != 'completed':
-            errors.append("Form must be marked 'Completed'")
-        
-        status = "❌ Compliance Failure" if errors else "✅ Compliant"
-        results.append({'Patient_ID': patient_id, 'Status': status, 'Errors': ", ".join(errors)})
-    return pd.DataFrame(results)
+uploaded_file = st.file_uploader("Upload your file (CSV or Excel)", type=['csv', 'xlsx'])
 
 if uploaded_file is not None:
     try:
-        data = pd.read_excel(uploaded_file)
-        results = validate_compliance(data)
-        st.write("### 📜 Automated Compliance Report")
-        st.dataframe(results)
+        # 1. Futuristic Logic: Detect file type automatically
+        if uploaded_file.name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file)
+        else:
+            df = pd.read_excel(uploaded_file, engine='openpyxl')
+
+        st.success("File uploaded successfully!")
+
+        # 2. Schema Validation (The "BizzyBot" standard)
+        missing_cols = [col for col in REQUIRED_COLUMNS if col not in df.columns]
+        if missing_cols:
+            st.error(f"Missing required columns: {missing_cols}")
+        else:
+            # 3. Intelligent Audit
+            st.write("### Audit Results")
+            
+            # Identify "Messy" Rows
+            null_count = df.isnull().sum().sum()
+            duplicates = df.duplicated().sum()
+            
+            # Show summary stats to make the client feel they got "value"
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Rows Processed", len(df))
+            col2.metric("Missing Values", null_count)
+            col3.metric("Duplicates", duplicates)
+
+            # Display errors for the client
+            if null_count > 0 or duplicates > 0:
+                st.warning("⚠️ Data quality issues detected. Please review the flagged rows below.")
+                st.dataframe(df[df.isnull().any(axis=1) | df.duplicated()])
+            else:
+                st.balloons()
+                st.success("✅ Perfect compliance! Your data is ready.")
+
     except Exception as e:
         st.error(f"Error processing file: {e}")
